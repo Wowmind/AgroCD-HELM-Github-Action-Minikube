@@ -1,0 +1,6 @@
+name: py-app
+image:
+  respository: py-app
+  tag: latest
+service:
+  type: deployment 

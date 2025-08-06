@@ -1,0 +1,48 @@
+name: Build and Deploy to Minikube
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  IMAGE_NAME: py-app
+  IMAGE_TAG: latest
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+
+    - name: Build and Push Docker image
+      run: |
+        docker build -t $DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG .
+        docker push $DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+
+    - name: Set up Minikube
+      uses: medyagh/setup-minikube@latest
+      with:
+        driver: docker
+
+    - name: Wait for Minikube
+      run: minikube status
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+
+    - name: Deploy to Minikube using Helm
+      run: |
+        helm upgrade --install flask-landing ./helm/flask-landing \
+          --set image.repository=$DOCKER_USERNAME/$IMAGE_NAME \
+          --set image.tag=$IMAGE_TAG
+
