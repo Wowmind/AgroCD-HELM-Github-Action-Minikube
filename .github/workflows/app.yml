@@ -42,7 +42,7 @@ jobs:
 
     - name: Deploy to Minikube using Helm
       run: |
-        helm upgrade --install flask-landing ./helm/flask-landing \
+        helm upgrade --install helm ./helm \
           --set image.repository=$DOCKER_USERNAME/$IMAGE_NAME \
           --set image.tag=$IMAGE_TAG
 
