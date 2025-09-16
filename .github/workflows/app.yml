@@ -7,8 +7,6 @@ on:
 env:
   IMAGE_NAME: py-app
   IMAGE_TAG: latest
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
 jobs:
   build-and-deploy:
@@ -22,12 +20,12 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Log in to Docker Hub
-      run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      run: echo "${{ secrets.DOCKER_PASSWORD }}"| docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     - name: Build and Push Docker image
       run: |
-        docker build --pull -t $DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG .
-        docker push $DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+        docker build --pull -t "${{ secrets.DOCKER_USERNAME }}"/$IMAGE_NAME:$IMAGE_TAG .
+        docker push ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$IMAGE_TAG
 
     - name: Set up Minikube
       uses: medyagh/setup-minikube@latest
@@ -43,5 +41,5 @@ jobs:
     - name: Deploy to Minikube using Helm
       run: |
         helm upgrade --install helm ./Helm \
-          --set image.repository=$DOCKER_USERNAME/$IMAGE_NAME \
+          --set image.repository=${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME \
           --set image.tag=$IMAGE_TAG
